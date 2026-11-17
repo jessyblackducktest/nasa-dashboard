@@ -53,3 +53,20 @@ This project is intentionally structured to exercise SAST, SCA, Container, IaC, 
 - **IaC target**: `k8s/` is a Helm chart (Black Duck Detect's Kubernetes detector keys off `Chart.yaml`; plain manifests without one aren't picked up) with intentional misconfigurations — `hostNetwork`, a `hostPath` mount of `/`, a `privileged` container running as root with `SYS_ADMIN`, a hardcoded API key, `automountServiceAccountToken: true`, and a mutable `:latest` image tag. `helm template nasa-dashboard k8s/ | trivy config -` turns up 24 findings (6 HIGH) out of the box.
 - **API target**: `api/openapi.yml` describes the Flask API surface for API scanning
 - **Dependencies to watch**: `requests==2.25.1`, `urllib3==1.26.5`, `PyYAML==5.3.1`, `Pillow==8.1.0`, `cryptography==3.3.1`, `gunicorn==20.0.4`, `lxml==4.6.2`
+
+---
+
+## CI secrets
+
+`.github/workflows/polaris.yml` reads these **repository secrets** (Settings → Secrets and variables → Actions → *Secrets* tab). The names must match exactly.
+
+| Secret | Used by | Value |
+|---|---|---|
+| `POLARIS_SERVER_URL` | `polaris-scan` | Polaris base URL, e.g. `https://polaris.blackduck.com` |
+| `POLARIS_ACCESS_TOKEN` | `polaris-scan` | Polaris access token |
+| `BLACKDUCKSCA_URL` | `blackduck-sca-scan` (currently disabled) | Black Duck SCA base URL only, no path |
+| `BLACKDUCKSCA_TOKEN` | `blackduck-sca-scan` (currently disabled) | Black Duck SCA API token |
+
+`GITHUB_TOKEN` is provided automatically. There is no `POLARIS_TOKEN` or `POLARIS_URL`. Black Duck's auto-generated `polaris-workflow.yml` expects `vars.POLARIS_URL` (a repository *variable*); if you add that workflow, point it at `secrets.POLARIS_SERVER_URL` instead.
+
+The Polaris step uses `mark_build_status: success`, so policy violations (expected in this repo) are reported in Polaris and PR comments without failing the build.
