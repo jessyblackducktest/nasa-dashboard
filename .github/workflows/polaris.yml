@@ -56,6 +56,9 @@ jobs:
           polaris_assessment_types: "SAST,SCA"
           polaris_branch_name: ${{ github.ref_name }}
           polaris_prComment_enabled: true
+          # Repo is intentionally vulnerable: report policy violations in
+          # Polaris / PR comments, but don't fail the build on them.
+          mark_build_status: success
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   container-scan:
